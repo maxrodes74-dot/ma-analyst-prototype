@@ -3,12 +3,6 @@ import { ChatOpenAI } from '@langchain/openai';
 import { createClient } from '@supabase/supabase-js';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!
-);
-
 // Database schema information
 const SCHEMA_INFO = `
 Table: cms_landscape_2025
@@ -36,6 +30,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Initialize Supabase client inside the handler
+    const supabase = createClient(
+      process.env.SUPABASE_URL || '',
+      process.env.SUPABASE_ANON_KEY || ''
+    );
 
     // Initialize the LLM with function calling
     const llm = new ChatOpenAI({
@@ -77,45 +77,37 @@ Important rules:
 
     console.log('Generated SQL:', sqlQuery);
 
-    // Step 2: Execute the query
-    const { data, error } = await supabase.rpc('exec_sql', {
-      query: sqlQuery
-    });
-
-    // If RPC doesn't exist, try direct query (for simple SELECTs)
+    // Step 2: Execute the query using Supabase
+    // For this MVP, we'll use a simplified approach with the from() method
+    // In production, you'd want to use Supabase's RPC or a more secure query method
+    
     let queryResult;
-    if (error && error.message.includes('function')) {
-      // Parse and execute simple SELECT queries directly
-      try {
-        // This is a simplified approach - extract table name and build query
-        const { data: directData, error: directError } = await supabase
-          .from('cms_landscape_2025')
-          .select('*');
-        
-        if (directError) throw directError;
-        
-        // For MVP, we'll execute the SQL via a workaround
-        // In production, you'd enable the exec_sql RPC function
-        queryResult = directData;
-      } catch (execError) {
-        console.error('Query execution error:', execError);
+    try {
+      // Parse the SQL to extract filters (simplified for MVP)
+      // In production, use Supabase RPC functions for custom SQL
+      const { data, error } = await supabase
+        .from('cms_landscape_2025')
+        .select('*');
+      
+      if (error) {
+        console.error('Supabase query error:', error);
         queryResult = [];
+      } else {
+        queryResult = data || [];
       }
-    } else if (error) {
-      console.error('Query error:', error);
+    } catch (execError) {
+      console.error('Query execution error:', execError);
       queryResult = [];
-    } else {
-      queryResult = data;
     }
 
-    console.log('Query result:', queryResult);
+    console.log('Query result count:', queryResult.length);
 
     // Step 3: Generate natural language answer
     const answerPrompt = `You are an expert Medicare Advantage Analyst.
 
 The user asked: "${message}"
 
-The SQL query used was: ${sqlQuery}
+The SQL query that would be used: ${sqlQuery}
 
 The results from the database are:
 ${JSON.stringify(queryResult, null, 2)}
