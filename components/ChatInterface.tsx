@@ -88,9 +88,9 @@ export default function ChatInterface() {
             <p className="text-sm mt-2">Ask me about Medicare Advantage plans, premiums, or ratings</p>
             <div className="mt-6 space-y-2 text-left max-w-md">
               <p className="text-xs text-gray-500 italic">Example questions:</p>
-              <p className="text-xs text-blue-600">"Which plan in Cook County has the lowest premium?"</p>
-              <p className="text-xs text-blue-600">"Show me all Humana plans"</p>
-              <p className="text-xs text-blue-600">"What are the highest rated plans in Florida?"</p>
+              <p className="text-xs text-blue-600">&quot;Which plan in Cook County has the lowest premium?&quot;</p>
+              <p className="text-xs text-blue-600">&quot;Show me all Humana plans&quot;</p>
+              <p className="text-xs text-blue-600">&quot;What are the highest rated plans in Florida?&quot;</p>
             </div>
           </div>
         ) : (
